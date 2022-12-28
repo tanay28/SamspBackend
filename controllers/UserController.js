@@ -34,9 +34,6 @@ const sendOtpViaEmail = async (email, otp) => {
     // create reusable transporter object using the default SMTP transport
     const userName = process.env.EMAIL_ID;
     const password = process.env.APP_PASS;
-    console.log('//----- ENV DATA -----//');
-    console.log(process.env.EMAIL_ID);
-    console.log(process.env.PASSWORD);
     const transporter = nodemailer.createTransport({
         port: 465,               // true for 465, false for other ports
         host: "smtp.gmail.com",
@@ -294,6 +291,7 @@ module.exports = {
                     };
                     sendOtpViaEmail(user.email, otp);
                     let otpData = new OtpSchema(otpSchemaObj);
+                    await otpData.remove();
                     await otpData.save();
                     logger.logActivity(loggerStatus.ERROR, JSON.stringify(otpSchemaObj), 'OTP Sent successfully!!', null, OPERATIONS.AUTH.FORGOT_PASS);
                     res.status(200).json({

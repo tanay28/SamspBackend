@@ -283,6 +283,18 @@ module.exports = {
                 logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to fetch data from DB', err, OPERATIONS.AUTH.FORGOT_PASS);
             });
             if (user && user != null) {
+                const otpExists = await OtpSchema.findOne({ phoneNo: phoneNo }).catch((err) => {
+                    logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to fetch data from DB', err, OPERATIONS.AUTH.FORGOT_PASS);
+                });
+                if (otpExists != null) {
+                    logger.logActivity(loggerStatus.ERROR, req.body, 'OTP already created', null, OPERATIONS.AUTH.FORGOT_PASS);
+                    res.status(500).json({
+                        status: 500,
+                        msg: 'OTP already created.!! Please try after 10 mins.',
+                        phoneNo: phoneNo
+                    });
+                    return;
+                }
                 const otp = between(1000,9999);
                 try {
                     const otpSchemaObj = {
@@ -291,7 +303,6 @@ module.exports = {
                     };
                     sendOtpViaEmail(user.email, otp);
                     let otpData = new OtpSchema(otpSchemaObj);
-                    await otpData.remove();
                     await otpData.save();
                     logger.logActivity(loggerStatus.ERROR, JSON.stringify(otpSchemaObj), 'OTP Sent successfully!!', null, OPERATIONS.AUTH.FORGOT_PASS);
                     res.status(200).json({

@@ -22,7 +22,8 @@ module.exports = {
             NEW_PASS: 'create new password',
             CHNAGE_PASS: 'change old pass'
         },
-        SMS: 'SMS gateway'
+        SMS: 'SMS gateway',
+        EMAIL: 'EMAIL Gateway'
     }
 
 };

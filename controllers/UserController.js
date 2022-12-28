@@ -5,6 +5,9 @@ const { hashSync, genSaltSync } = require('bcrypt');
 const otpGenerator = require('otp-generator');
 const OtpSchema = require('../model/mongomodelotp');
 const axios = require('axios');
+const nodemailer = require('nodemailer');
+const crypto = require("crypto");
+require('dotenv').config();
 
 const sendOTPV1 = (phoneNo, otp) => {
 
@@ -19,15 +22,47 @@ const sendOTPV1 = (phoneNo, otp) => {
 
     const url = 'https://api.textlocal.in/send/?' + createdParams;
     axios.get(url).then(res => {
-    console.log('//--- SMS Res -----//');
-    console.log(res.data);
-    console.log('//--- END  -----//');
     logger.logActivity(loggerStatus.INFO, createdParams, 'SMS Gateway', res.data, OPERATIONS.SMS);
   })
   .catch(error => {
     console.error(error);
     logger.logActivity(loggerStatus.ERROR, createdParams, 'SMS Gateway', error, OPERATIONS.SMS);
   });
+}
+
+const sendOtpViaEmail = async (email, otp) => {
+    // create reusable transporter object using the default SMTP transport
+    const userName = process.env.EMAIL_ID;
+    const password = process.env.APP_PASS;
+    console.log('//----- ENV DATA -----//');
+    console.log(process.env.EMAIL_ID);
+    console.log(process.env.PASSWORD);
+    const transporter = nodemailer.createTransport({
+        port: 465,               // true for 465, false for other ports
+        host: "smtp.gmail.com",
+        auth: {
+            user: userName,
+            pass: password,
+        },
+        secure: true,
+    });
+
+    const info = await transporter.sendMail({
+        from: userName,
+        to: email,
+        subject: "Password Reset",
+        text: 'One Time Password',
+        html: '<b>Your One Time Password is: '+ otp +'</b>'
+    });
+    console.log("Message sent: %s", info.messageId);
+    return info.messageId;
+
+}
+
+const between = (min, max) => {
+    return Math.floor(
+        Math.random() * (max - min) + min
+    )
 }
 
 module.exports = {
@@ -153,7 +188,7 @@ module.exports = {
             }
 
             if (userCredential && userCredential != null) { 
-                await Users.updateOne({ access: true}, {id: userCredential.id }).catch((err) => {
+                await Users.updateOne({ _id: userCredential._id }, { access: true}).catch((err) => {
                     logger.logActivity(loggerStatus.ERROR, username, 'Internal server error!!', err, OPERATIONS.AUTH.ACTIVATION);
                     res.status(500).json({
                         status:500,
@@ -197,7 +232,7 @@ module.exports = {
             }
 
             if (userCredential && userCredential != null) { 
-                const user = await Users.updateOne({ access: false }, { id: userCredential.id }).catch((err) => {
+                const user = await Users.updateOne({ _id: userCredential._id }, { access: false }).catch((err) => {
                     logger.logActivity(loggerStatus.ERROR, username, 'Internal server error!!', err, OPERATIONS.AUTH.ACTIVATION);
                     res.status(500).json({
                         status:500,
@@ -250,29 +285,21 @@ module.exports = {
             const user = await Users.findOne({ phoneNo: phoneNo }).catch((err) => {
                 logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to fetch data from DB', err, OPERATIONS.AUTH.FORGOT_PASS);
             });
-
             if (user && user != null) {
-                const otp = otpGenerator.generate(6, { 
-                    digits: true,
-                    specialChars: false,
-                    upperCaseAlphabets: false, 
-                    lowerCaseAlphabets: false
-                });
-
+                const otp = between(1000,9999);
                 try {
                     const otpSchemaObj = {
                         otp: otp,
                         phoneNo: phoneNo
                     };
-
-                    sendOTPV1(phoneNo, otp);
+                    sendOtpViaEmail(user.email, otp);
                     let otpData = new OtpSchema(otpSchemaObj);
                     await otpData.save();
                     logger.logActivity(loggerStatus.ERROR, JSON.stringify(otpSchemaObj), 'OTP Sent successfully!!', null, OPERATIONS.AUTH.FORGOT_PASS);
                     res.status(200).json({
                         status: 200,
                         msg: 'OTP Sent successfully!!',
-                        phoneno: phoneNo,
+                        email: user.email
                     });
                 } catch (error) {
                     logger.logActivity(loggerStatus.ERROR, phoneNo, 'Unable to send OTP.!! Please try again.', null, OPERATIONS.AUTH.FORGOT_PASS);
@@ -280,7 +307,7 @@ module.exports = {
                     res.status(500).json({
                         status: 500,
                         msg: 'Unable to send OTP.!! Please try again.',
-                        phoneno: phoneNo,
+                        email: user.email
                     });
                 }
                 
@@ -361,7 +388,7 @@ module.exports = {
             if (user && user != null) {
                 const salt = genSaltSync(10);
                 const newpass = hashSync(newPassword, salt);
-                const userUpdated = await Users.updateOne({ password: newpass }, { id: user.id }).catch((err) => {
+                const userUpdated = await Users.updateOne({ _id: user._id }, { password: newpass }).catch((err) => {
                     logger.logActivity(loggerStatus.ERROR, userUpdated, 'Internal server error!!', err, OPERATIONS.AUTH.NEW_PASS);
                     res.status(500).json({
                         status:500,
@@ -369,7 +396,7 @@ module.exports = {
                     });
                     return;
                 });
-                
+
                 if(userUpdated != null) {
                     logger.logActivity(loggerStatus.INFO, userUpdated, 'Password reset successfully!!', null, OPERATIONS.AUTH.NEW_PASS);
                     res.status(200).json({

@@ -159,13 +159,13 @@ module.exports = {
                     data: allExistingsUser
                 });
             }  else {
-                logger.logActivity(loggerStatus.INFO, req.body, 'No user found!!', null, OPERATIONS.USERS.CREATE);
+                logger.logActivity(loggerStatus.INFO, req.body, 'No user found!!', null, OPERATIONS.USERS.RETRIEVE);
                 res.status(400).json({ message: 'No user found!!' });
             }
 
         } catch (error) {
             console.error(error);
-            logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to execute db query to select', error, OPERATIONS.USERS.CREATE);
+            logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to execute db query to select', error, OPERATIONS.USERS.RETRIEVE);
         }  
     },
 
@@ -186,7 +186,7 @@ module.exports = {
             }
 
             if (userCredential && userCredential != null) { 
-                await Users.updateOne({ _id: userCredential._id }, { access: true}).catch((err) => {
+                await Users.updateMany({ _id: userCredential._id }, { $set: { access: true } }).catch((err) => {
                     logger.logActivity(loggerStatus.ERROR, username, 'Internal server error!!', err, OPERATIONS.AUTH.ACTIVATION);
                     res.status(500).json({
                         status:500,
@@ -230,7 +230,7 @@ module.exports = {
             }
 
             if (userCredential && userCredential != null) { 
-                const user = await Users.updateOne({ _id: userCredential._id }, { access: false }).catch((err) => {
+                const user = await Users.updateMany({ _id: userCredential._id }, {$set: {  access: false } }).catch((err) => {
                     logger.logActivity(loggerStatus.ERROR, username, 'Internal server error!!', err, OPERATIONS.AUTH.ACTIVATION);
                     res.status(500).json({
                         status:500,
@@ -240,14 +240,14 @@ module.exports = {
                 });
                 
                 if(user != null) {
-                    logger.logActivity(loggerStatus.ERROR, username, 'User deactivated!!', null, OPERATIONS.AUTH.ACTIVATION);
+                    logger.logActivity(loggerStatus.INFO, username, 'User deactivated!!', null, OPERATIONS.AUTH.ACTIVATION);
                     res.status(200).json({
                         status: 200,
                         user: username
                     });
                 } else {
-                    res.status(200).json({
-                        status: 200,
+                    res.status(500).json({
+                        status: 500,
                         msg: 'Something went wrong!! Please try again after some time.'
                     });
                     return;

@@ -23,7 +23,14 @@ module.exports = {
             CHNAGE_PASS: 'change old pass'
         },
         SMS: 'SMS gateway',
-        EMAIL: 'EMAIL Gateway'
+        EMAIL: 'EMAIL Gateway',
+        COURSES: {
+            CREATE: 'create a course',
+            MODIFY: 'modify course info',
+            REMOVE: 'remove course info',
+            RETRIEVE: 'get all course',
+            RETRIEVE_BY_ID: 'get course by id'
+        },
     }
 
 };

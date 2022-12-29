@@ -25,9 +25,17 @@ const Course = new mongoose.Schema({
     type: String,
     allowNull: false,
   },
+  courseFeatures: {
+    type: String,
+    allowNull: false,
+  },
   courseImages: {
     type: String,
     allowNull: false,
+  },
+  isDeleted: {
+    type: Boolean,
+    allowNull: false
   },
   createdAt: { 
     type: Date, 

@@ -4,18 +4,13 @@ module.exports = {
   checkToken: (req, res, next) => {
     let token = req.get("authorization");
     let currentUser = req.get("currentUser");
+
     if (token) {
       // Remove Bearer from string
       token = token.slice(7);
-      jwt.verify(token, process.env.SALT, (err, decoded) => {
-        if (err) {
-          return res.json({
-            status: 400,
-            message: "Invalid Token..."
-          });
-        } else {
-
-          if (decoded.result.email === currentUser) {
+      try {
+        const decoded = jwt.verify(token, process.env.SALT);
+        if (decoded.result.email === currentUser) {
             req.decoded = decoded.result;
             next();
           } else {
@@ -24,9 +19,12 @@ module.exports = {
               message: "Token is not valid for this user.!! Please retry with a valid user."
             });
           }
-         
-        }
-      });
+      } catch (e) {
+        return res.json({
+          status: 400,
+          message: "Invalid Token..."
+        });
+      }
     } else {
       return res.json({
         success: 0,

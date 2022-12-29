@@ -1,16 +1,18 @@
 const logger = require('./LoggerController');
 const { loggerStatus, OPERATIONS } = require('../config/LoggerObject');
 const Users = require('../model/usermodel');
-const { compareSync, genSaltSync, hashSync } = require("bcrypt");
+const { compareSync, hashSync, compare } = require("bcrypt");
 const { sign } = require("jsonwebtoken");
 require('dotenv').config();
 
-const processLogin = (userCredential, password, username) => {
+const processLogin = async (userCredential, password, username) => {
     try {
-        const result = compareSync(password, userCredential.password);
+        const result = await compare(password, userCredential.password);
+        console.log('//------ Result -------//');
+        console.log(result);
         if (result) {
             userCredential.password = undefined;
-            const jsontoken = sign({ result: userCredential }, genSaltSync(10), {
+            const jsontoken = sign({ result: userCredential }, process.env.SALT, {
                 expiresIn: "3h"
             });
             logger.logActivity(loggerStatus.INFO, username, 'login successfully processed', null, OPERATIONS.AUTH.LOGIN);
@@ -49,7 +51,7 @@ module.exports = {
        
         if (userCredential && userCredential != null) {
             if (userCredential.access) {
-                const jsontoken = processLogin(userCredential, password, username)
+                const jsontoken = await processLogin(userCredential, password, username)
                 if (jsontoken != null) {
                     res.status(200).json({
                         status: 200,
@@ -97,7 +99,7 @@ module.exports = {
             });
 
             if (userCredential && userCredential != null) {
-                const salt = genSaltSync(10);
+                const salt = process.env.SALT;
                 const newpass = hashSync(newPassword, salt);
                 const userUpdated = await Users.update({ password: newpass}, { where: { id: userCredential.id }}).catch((err) => {
                     logger.logActivity(loggerStatus.ERROR, userEmail, 'Internal server error!!', err, OPERATIONS.AUTH.CHNAGE_PASS);

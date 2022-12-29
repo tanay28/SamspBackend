@@ -1,13 +1,14 @@
 const logger = require('./LoggerController');
 const { loggerStatus, OPERATIONS } = require('../config/LoggerObject');
 const Users = require('../model/usermodel');
-const { hashSync, genSaltSync } = require('bcrypt');
 const otpGenerator = require('otp-generator');
 const OtpSchema = require('../model/mongomodelotp');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
 const crypto = require("crypto");
 require('dotenv').config();
+const { hash } = require("bcrypt");
+var BCRYPT_SALT_ROUNDS = 12;
 
 const sendOTPV1 = (phoneNo, otp) => {
 
@@ -111,11 +112,10 @@ module.exports = {
         }   
         
         try {
-            const salt = genSaltSync(10);
             const newUser = new Users({ 
                 fullName : userFullName, 
                 email: userEmail, 
-                password : hashSync(userPassword, salt),
+                password : await hash(userPassword, BCRYPT_SALT_ROUNDS),
                 phoneNo : userPhoneNo,
                 className: userClassName == null ? '' : userClassName,
                 schoolName: userSchoolName == null ? '' : userSchoolName,
@@ -148,7 +148,7 @@ module.exports = {
 
     getAllUser: async (req, res) => {
         try {
-            const allExistingsUser = await Users.findAll({ }).catch((err) => {
+            const allExistingsUser = await Users.find().catch((err) => {
                 logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to fetch all users', err, OPERATIONS.USERS.RETRIEVE);
             });
 
@@ -164,6 +164,7 @@ module.exports = {
             }
 
         } catch (error) {
+            console.error(error);
             logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to execute db query to select', error, OPERATIONS.USERS.CREATE);
         }  
     },
@@ -395,8 +396,8 @@ module.exports = {
             });
 
             if (user && user != null) {
-                const salt = genSaltSync(10);
-                const newpass = hashSync(newPassword, salt);
+                const salt = process.env.SALT;
+                const newpass = await hash(newPassword, BCRYPT_SALT_ROUNDS);
                 const userUpdated = await Users.updateOne({ _id: user._id }, { password: newpass }).catch((err) => {
                     logger.logActivity(loggerStatus.ERROR, userUpdated, 'Internal server error!!', err, OPERATIONS.AUTH.NEW_PASS);
                     res.status(500).json({

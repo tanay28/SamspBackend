@@ -1,67 +1,67 @@
-const logger = require('./LoggerController');
-const { loggerStatus, OPERATIONS } = require('../config/LoggerObject');
-const Users = require('../model/usermodel');
-const otpGenerator = require('otp-generator');
-const OtpSchema = require('../model/mongomodelotp');
-const axios = require('axios');
-const nodemailer = require('nodemailer');
-const crypto = require("crypto");
-require('dotenv').config();
-const { hash } = require("bcrypt");
-var BCRYPT_SALT_ROUNDS = 12;
+// const logger = require('./LoggerController');
+// const { loggerStatus, OPERATIONS } = require('../config/LoggerObject');
+// const Users = require('../model/usermodel');
+// const otpGenerator = require('otp-generator');
+// const OtpSchema = require('../model/mongomodelotp');
+// const axios = require('axios');
+// const nodemailer = require('nodemailer');
+// const crypto = require("crypto");
+// require('dotenv').config();
+// const { hash } = require("bcrypt");
+// const BCRYPT_SALT_ROUNDS = 12;
 
-const sendOTPV1 = (phoneNo, otp) => {
+// const sendOTPV1 = (phoneNo, otp) => {
 
-    const dataMsg = `Hi there, thank you for sending your first test message from Textlocal. Get 20% off today with our code: ${otp}.`;
+//     const dataMsg = `Hi there, thank you for sending your first test message from Textlocal. Get 20% off today with our code: ${otp}.`;
 
-    const apiKey = 'apikey=' + encodeURIComponent(process.env.API_KEY);
-    const message = '&message=' + encodeURIComponent(dataMsg);
-    const sender = '&sender=' + encodeURIComponent(process.env.SMS_FROM);
-    const numbers = '&numbers=' + encodeURIComponent(phoneNo);
+//     const apiKey = 'apikey=' + encodeURIComponent(process.env.API_KEY);
+//     const message = '&message=' + encodeURIComponent(dataMsg);
+//     const sender = '&sender=' + encodeURIComponent(process.env.SMS_FROM);
+//     const numbers = '&numbers=' + encodeURIComponent(phoneNo);
 
-    const createdParams = apiKey + numbers + message + sender;
+//     const createdParams = apiKey + numbers + message + sender;
 
-    const url = 'https://api.textlocal.in/send/?' + createdParams;
-    axios.get(url).then(res => {
-    logger.logActivity(loggerStatus.INFO, createdParams, 'SMS Gateway', res.data, OPERATIONS.SMS);
-  })
-  .catch(error => {
-    console.error(error);
-    logger.logActivity(loggerStatus.ERROR, createdParams, 'SMS Gateway', error, OPERATIONS.SMS);
-  });
-}
+//     const url = 'https://api.textlocal.in/send/?' + createdParams;
+//     axios.get(url).then(res => {
+//     logger.logActivity(loggerStatus.INFO, createdParams, 'SMS Gateway', res.data, OPERATIONS.SMS);
+//   })
+//   .catch(error => {
+//     console.error(error);
+//     logger.logActivity(loggerStatus.ERROR, createdParams, 'SMS Gateway', error, OPERATIONS.SMS);
+//   });
+// }
 
-const sendOtpViaEmail = async (email, otp) => {
-    // create reusable transporter object using the default SMTP transport
-    const userName = process.env.EMAIL_ID;
-    const password = process.env.APP_PASS;
-    const transporter = nodemailer.createTransport({
-        port: 465,               // true for 465, false for other ports
-        host: "smtp.gmail.com",
-        auth: {
-            user: userName,
-            pass: password,
-        },
-        secure: true,
-    });
+// const sendOtpViaEmail = async (email, otp) => {
+//     // create reusable transporter object using the default SMTP transport
+//     const userName = process.env.EMAIL_ID;
+//     const password = process.env.APP_PASS;
+//     const transporter = nodemailer.createTransport({
+//         port: 465,               // true for 465, false for other ports
+//         host: "smtp.gmail.com",
+//         auth: {
+//             user: userName,
+//             pass: password,
+//         },
+//         secure: true,
+//     });
 
-    const info = await transporter.sendMail({
-        from: userName,
-        to: email,
-        subject: "Password Reset",
-        text: 'One Time Password',
-        html: '<b>Your One Time Password is: '+ otp +'</b>'
-    });
-    console.log("Message sent: %s", info.messageId);
-    return info.messageId;
+//     const info = await transporter.sendMail({
+//         from: userName,
+//         to: email,
+//         subject: "Password Reset",
+//         text: 'One Time Password',
+//         html: '<b>Your One Time Password is: '+ otp +'</b>'
+//     });
+//     console.log("Message sent: %s", info.messageId);
+//     return info.messageId;
 
-}
+// }
 
-const between = (min, max) => {
-    return Math.floor(
-        Math.random() * (max - min) + min
-    )
-}
+// const between = (min, max) => {
+//     return Math.floor(
+//         Math.random() * (max - min) + min
+//     )
+// }
 
 module.exports = {
 
@@ -148,7 +148,7 @@ module.exports = {
 
     fetchUser: async(req, res) => {
         res.send("ok, Hello There!!");
-    },
+    }
 
     // getAllUser: async (req, res) => {
     //     try {

@@ -147,6 +147,8 @@ module.exports = {
     },
 
     getAllUser: async (req, res) => {
+        res.send("ok");
+        return;
         try {
             const allExistingsUser = await Users.find().catch((err) => {
                 logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to fetch all users', err, OPERATIONS.USERS.RETRIEVE);

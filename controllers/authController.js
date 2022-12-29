@@ -8,8 +8,6 @@ require('dotenv').config();
 const processLogin = async (userCredential, password, username) => {
     try {
         const result = await compare(password, userCredential.password);
-        console.log('//------ Result -------//');
-        console.log(result);
         if (result) {
             userCredential.password = undefined;
             const jsontoken = sign({ result: userCredential }, process.env.SALT, {

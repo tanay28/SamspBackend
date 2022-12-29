@@ -1,9 +1,9 @@
 const express = require('express');
 const healthCheckRoutes = require('./healthcheckRoutes');
-const userRoutes = require('./UserRoutes');
+const userRoutes = require('./userRoutes');
 const authRoutes = require('./authRoutes');
 const testRoutes = require('./testRoutes');
-const courseRoutes = require('./CourseRoutes');
+const courseRoutes = require('./courseRoutes');
 
 const router = express.Router();
 

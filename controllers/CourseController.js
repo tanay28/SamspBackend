@@ -71,6 +71,7 @@ module.exports = {
             }
 
         } catch (error) {
+            console.error(error);
             logger.logActivity(loggerStatus.ERROR, req.body, 'Unable to execute db query to select', error, OPERATIONS.COURSES.RETRIEVE);
         }  
     },
